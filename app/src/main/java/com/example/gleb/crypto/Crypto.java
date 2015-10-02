@@ -109,9 +109,10 @@ public class Crypto extends Activity {
             public void onClick(View v) {
                 byte[] decryptedData = new byte[0];
                 try {
-//                    decryptMd5Hash = RSA.decryptMd5(encryptMd5Hash);
-                    byte[] b = readHash();
-                    decryptMd5Hash = RSA.decryptMd5(b);
+                    //get encrypt md5 hash from file
+                    encryptMd5Hash = readHash();
+                    decryptMd5Hash = RSA.decryptMd5(encryptMd5Hash);
+                    //delete md5 hash from end file
                     deleteHash();
                     byte[] a = readContentIntoByteArray(new File(filePath));
                     if (compare(md5Hash, decryptMd5Hash)){
