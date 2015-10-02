@@ -58,6 +58,7 @@ public class Crypto extends Activity {
     public byte[] encryptMd5Hash;
     public byte[] decryptMd5Hash;
     public byte[] md5Hash;
+    public byte[] rsaFromFile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,8 +69,6 @@ public class Crypto extends Activity {
         decryptButton = (Button) findViewById(R.id.decryptButton);
         encryptRsaButton = (Button) findViewById(R.id.encryptRsaButton);
         decryptRsaButton = (Button) findViewById(R.id.decryptRsaButton);
-
-//        securityKey = securityKeyEditText.getText().toString();
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -107,6 +106,8 @@ public class Crypto extends Activity {
         decryptRsaButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //get RSA key from file
+                rsaFromFile = readContentIntoByteArray(new File(Environment.getExternalStorageDirectory(), "KeyWithPublicKey"));
                 byte[] decryptedData = new byte[0];
                 try {
                     //get encrypt md5 hash from file
@@ -115,15 +116,11 @@ public class Crypto extends Activity {
                     //delete md5 hash from end file
                     deleteHash();
                     byte[] a = readContentIntoByteArray(new File(filePath));
-                    if (compare(md5Hash, decryptMd5Hash)){
+                    if (compare(md5Hash, decryptMd5Hash)) {
                         Log.d(TAG, String.valueOf(md5Hash));
-                        byte[] bytes = RSA.Decrypt(rsaKey);
+                        byte[] bytes = RSA.Decrypt(rsaFromFile);
                         decryptedData = decrypt(bytes, a);
                     }
-                    //if (compare(md5Hash, decryptMd5Hash)) {
-//                        byte[] bytes = RSA.Decrypt(rsaKey);
-//                        decryptedData = decrypt(bytes, a);
-                    //}
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -134,21 +131,26 @@ public class Crypto extends Activity {
 
             }
         });
-
     }
 
-    public static boolean compare(byte[] b1, byte[] b2){
-        if (b1 == null && b2 == null){
+    /**
+     *Compare array of bytes
+     * @b1    first array of bytes
+     * @b2    second array of bytes
+     * @return    is compare 2 arrays of bytes
+     */
+    public static boolean compare(byte[] b1, byte[] b2) {
+        if (b1 == null && b2 == null) {
             return true;
         }
-        if (b1 == null || b2 == null){
+        if (b1 == null || b2 == null) {
             return false;
         }
-        if (b1.length != b2.length){
+        if (b1.length != b2.length) {
             return false;
         }
-        for (int i=0; i<b1.length; i++){
-            if (b1[i] != b2[i]){
+        for (int i = 0; i < b1.length; i++) {
+            if (b1[i] != b2[i]) {
                 return false;
             }
         }
@@ -256,36 +258,6 @@ public class Crypto extends Activity {
                 Toast toast = Toast.makeText(Crypto.this, message, Toast.LENGTH_LONG);
                 toast.show();
 
-//                byte[] b = readContentIntoByteArray(new File(filePath));
-//                byte[] keyStart = new byte[0];
-//                try {
-//                    keyStart = RSA.Encrypt(securityKey);
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//                SecureRandom sr = null;
-//                KeyGenerator kgen = null;
-//                try {
-//                    kgen = KeyGenerator.getInstance("AES");
-//                    sr = SecureRandom.getInstance("SHA1PRNG");
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//
-//                sr.setSeed(keyStart);
-//                kgen.init(128, sr); // 192 and 256 bits may not be available
-//                SecretKey skey = kgen.generateKey();
-//                key = skey.getEncoded();
-//
-//                // encrypt
-//                try {
-//                    byte[] encryptedData = encrypt(key, b);
-//                    Toast.makeText(Crypto.this, new String(encryptedData), Toast.LENGTH_LONG).show();
-//                    writeFileByte(encryptedData);
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-
                 byte[] b = readContentIntoByteArray(new File(filePath));
                 byte[] keyStart = "thiskey".getBytes();
                 SecureRandom sr = null;
@@ -308,8 +280,7 @@ public class Crypto extends Activity {
                     writer.append(new String(key));
                     writer.flush();
                     writer.close();
-                }
-                catch(IOException e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
 
@@ -320,6 +291,7 @@ public class Crypto extends Activity {
                     byte[] encryptedData = encrypt(key, b);
                     Toast.makeText(Crypto.this, new String(encryptedData), Toast.LENGTH_LONG).show();
                     writeFileByte(encryptedData);
+                    //save in file KeyWithPublicKey
                     rsaKey = RSA.Encrypt(key);
                     encryptMd5Hash = RSA.encryptMd5(md5Hash);
                     writeFileByteContentAndHash(encryptedData, encryptMd5Hash);
@@ -332,66 +304,56 @@ public class Crypto extends Activity {
         }
     }
 
-    private static byte[] readContentIntoByteArray(File file)
-    {
+    /**
+     * Read content from file
+     * @return    array byte of content from file
+    */
+    private static byte[] readContentIntoByteArray(File file) {
         FileInputStream fileInputStream = null;
         byte[] bFile = new byte[(int) file.length()];
-        try
-        {
+        try {
             //convert file into array of bytes
             fileInputStream = new FileInputStream(file);
             fileInputStream.read(bFile);
             fileInputStream.close();
-            for (int i = 0; i < bFile.length; i++)
-            {
+            for (int i = 0; i < bFile.length; i++) {
                 System.out.print((char) bFile[i]);
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return bFile;
     }
 
-    private static String readContentIntoString(File file)
-    {
+    /**
+     * Read content from file
+     * @return    string of content from file
+     */
+    private static String readContentIntoString(File file) {
         FileInputStream fileInputStream = null;
         byte[] bFile = new byte[(int) file.length()];
-        try
-        {
+        try {
             //convert file into array of bytes
             fileInputStream = new FileInputStream(file);
             fileInputStream.read(bFile);
             fileInputStream.close();
-            for (int i = 0; i < bFile.length; i++)
-            {
+            for (int i = 0; i < bFile.length; i++) {
                 System.out.print((char) bFile[i]);
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return new String(bFile);
     }
 
-//    public void writeFileByte(byte[] bFile) throws IOException {
-//        FileOutputStream fos = new FileOutputStream(filePath);
-//        fos.write(bFile);
-//        fos.close();
-//
-//    }
-
     public void writeFileByte(byte[] bFile) throws IOException {
         FileOutputStream fos = new FileOutputStream(filePath);
         fos.write(bFile);
         fos.close();
-
     }
 
     /**
-     * Write content and hash
+     * Write content and hash to file
      */
     public void writeFileByteContentAndHash(byte[] bFile, byte[] md5) throws IOException {
         FileOutputStream fos = new FileOutputStream(filePath);
@@ -400,29 +362,6 @@ public class Crypto extends Activity {
         fos.write(md5);
         fos.write((byte) a);
         fos.close();
-
-        byte[] b = readHash();
-
-//        deleteHash();
-
-//        /**
-//        * Read hash from content
-//        */
-//        File target = new File(filePath);
-//        RandomAccessFile raf = new RandomAccessFile(target, "rw");
-//        raf.seek(target.length() - 129);
-//        byte[] b = new byte[128];
-//        raf.read(b);
-//        raf.close();
-//
-//        /**
-//        * Delete hash
-//        * */
-//        target = new File(filePath);
-//        raf = new RandomAccessFile(target, "rw");
-//        raf.seek(target.length() - 129);
-//        raf.setLength(raf.length() - 129);
-//        raf.close();
     }
 
     /**
@@ -441,7 +380,7 @@ public class Crypto extends Activity {
 
     /**
      * Delete hash
-     * */
+     */
     public void deleteHash() throws IOException {
         File target = new File(filePath);
         RandomAccessFile raf = new RandomAccessFile(target, "rw");
@@ -450,23 +389,22 @@ public class Crypto extends Activity {
         raf.close();
     }
 
-    public void writeFileString(String value){
+    public void writeFileString(String value) {
         BufferedWriter writer = null;
-        try{
+        try {
             writer = new BufferedWriter(new FileWriter(filePath));
             writer.write(value);
         }
-        catch ( IOException e) {
+        catch (IOException e) {
         }
         finally {
             try {
-                if ( writer != null)
-                    writer.close( );
+                if (writer != null)
+                    writer.close();
             }
-            catch ( IOException e) {
+            catch (IOException e) {
             }
         }
-
     }
 
     private static byte[] encrypt(byte[] raw, byte[] clear) throws Exception {
