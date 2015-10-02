@@ -4,6 +4,8 @@ import android.os.Environment;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -34,7 +36,7 @@ public class RSA {
     public static Cipher cipher, cipher1, cipherMd5, cipherMd6;
     public static String encrypted, decrypted;
 
-    public static byte[] Encrypt(byte[] plain) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public static byte[] Encrypt(byte[] plain) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException {
         kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(1024);
         kp = kpg.genKeyPair();
@@ -82,17 +84,11 @@ public class RSA {
 
     }
 
-    public static void createFile(String name, byte[] value){
-        try {
-            File gpxfile = new File(Environment.getExternalStorageDirectory(), name);
-            FileWriter writer = new FileWriter(gpxfile);
-            writer.append(new String(value));
-            writer.flush();
-            writer.close();
-        }
-        catch(IOException e) {
-            e.printStackTrace();
-        }
+    public static void createFile(String name, byte[] value) throws IOException {
+        File gpxfile = new File(Environment.getExternalStorageDirectory(), name);
+        FileOutputStream fos = new FileOutputStream(gpxfile);
+        fos.write(value);
+        fos.close();
 
     }
 
@@ -101,10 +97,5 @@ public class RSA {
         b2[0] = 1;
         System.arraycopy(b, 0, b2, 1, b.length);
         return new BigInteger(b2).toString(36);
-    }
-
-    public  byte[] stringToBytes(String s) {
-        byte[] b2 = new BigInteger(s, 36).toByteArray();
-        return Arrays.copyOfRange(b2, 1, b2.length);
     }
 }
